@@ -43,12 +43,12 @@ pipeline {
         stage('Code Coverage') {
             steps {
                 echo 'Publishing code coverage report...'
-                dir('C:\\ProgramData\\Jenkins\\my-app') {
+                dir('C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\6.2HD V1\\MyJavaApp\\target\\site\\jacoco') {
                     publishHTML(target: [
                         allowMissing: false,
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
-                        reportDir: 'target/site/jacoco',
+                        reportDir: 'C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\6.2HD V1\\MyJavaApp\\target\\site\\jacoco',
                         reportFiles: 'index.html',
                         reportName: 'JaCoCo Code Coverage Report'
                     ])
@@ -88,7 +88,7 @@ pipeline {
             steps {
                 echo 'Performing SonarQube analysis...'
                 dir('C:\\ProgramData\\Jenkins\\my-app') {
-                    withSonarQubeEnv('MySonarQubeServer') {  // Correctly enclosed this block
+                    withSonarQubeEnv('MySonarQubeServer') {
                         bat 'mvn sonar:sonar'
                     }
                 }
@@ -134,14 +134,12 @@ pipeline {
     post {
         success {
             echo 'Pipeline completed successfully!'
-            // Send success notification
             mail to: 'cold2thev@gmail.com',
                  subject: "Build Successful: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "The build was successful."
         }
         failure {
             echo 'Pipeline failed.'
-            // Send failure notification
             mail to: 'cold2thev@gmail.com',
                  subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "The build failed. Please check the Jenkins console output."

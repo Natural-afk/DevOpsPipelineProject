@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven 3.8.6' 
-        jdk 'JDK 17'        
+        maven 'Maven 3.8.6'
+        jdk 'JDK 17'
     }
 
     environment {
         DEPLOY_DIR = 'C:\\ProgramData\\Jenkins\\my-app\\deployment'
-        TRIVY_PATH = '"C:\\Program Files\\Trivy\\trivy.exe"' 
+        TRIVY_PATH = '"C:\\Program Files\\Trivy\\trivy.exe"'
     }
 
     stages {
@@ -17,7 +17,7 @@ pipeline {
                 echo 'Checking out source code...'
                 git branch: 'main',
                     url: 'https://github.com/Natural-afk/DevOpsPipelineProject.git',
-                    credentialsId: 'NewGitHub' 
+                    credentialsId: 'NewGitHub'
             }
         }
 
@@ -88,7 +88,7 @@ pipeline {
             steps {
                 echo 'Performing SonarQube analysis...'
                 dir('C:\\ProgramData\\Jenkins\\my-app') {
-                    withSonarQubeEnv('MySonarQubeServer') 
+                    withSonarQubeEnv('MySonarQubeServer') {  // Correctly enclosed this block
                         bat 'mvn sonar:sonar'
                     }
                 }
@@ -106,7 +106,7 @@ pipeline {
 
         stage('Deploy') {
             when {
-                branch 'main' 
+                branch 'main'
             }
             steps {
                 echo 'Deploying application locally...'
@@ -120,7 +120,6 @@ pipeline {
                 bat """
                 copy "C:\\ProgramData\\Jenkins\\my-app\\target\\my-app-1.0-SNAPSHOT.jar" "${env.DEPLOY_DIR}\\my-app.jar" /Y
                 """
-
 
                 // Uncomment the following lines to run the application
                 /*

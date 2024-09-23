@@ -1,95 +1,151 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven 3.8.6' 
+        jdk 'JDK 17'        
+    }
+
     environment {
-        DOCKER_IMAGE = "natural-afk/todo-app:${env.BUILD_NUMBER}"
-        SONARQUBE = "SonarQube"  // Ensure SonarQube is configured in Jenkins
-        GIT_REPO_URL = 'https://github.com/Natural-afk/DevOpsPipelineProject.git'
+        DEPLOY_DIR = 'C:\\ProgramData\\Jenkins\\my-app\\deployment'
+        TRIVY_PATH = '"C:\\Program Files\\Trivy\\trivy.exe"' 
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from GitHub
-                git credentialsId: 'github-pat', url: "${GIT_REPO_URL}", branch: 'main'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                // Install npm dependencies
-                sh 'npm install'
+                echo 'Checking out source code...'
+                git branch: 'main',
+                    url: 'https://github.com/Natural-afk/DevOpsPipelineProject.git',
+                    credentialsId: 'NewGitHub' 
             }
         }
 
         stage('Build') {
             steps {
-                // Build the application
-                sh 'npm run build'
-                // Build Docker image
-                sh "docker build -t ${DOCKER_IMAGE} ."
+                echo 'Building the application...'
+                dir('C:\\ProgramData\\Jenkins\\my-app') {
+                    bat 'mvn clean package'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                // Run automated tests
-                sh 'npm test'
+                echo 'Running unit tests...'
+                dir('C:\\ProgramData\\Jenkins\\my-app') {
+                    bat 'mvn test'
+                    junit 'target\\surefire-reports\\*.xml'
+                }
             }
         }
 
-        stage('Code Quality Analysis') {
+        stage('Code Coverage') {
             steps {
-                // Run SonarQube analysis
-                withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner'
+                echo 'Publishing code coverage report...'
+                dir('C:\\ProgramData\\Jenkins\\my-app') {
+                    publishHTML(target: [
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'target/site/jacoco',
+                        reportFiles: 'index.html',
+                        reportName: 'JaCoCo Code Coverage Report'
+                    ])
+                }
+            }
+        }
+
+        stage('Trivy Vulnerability Scan') {
+            steps {
+                echo 'Running Trivy Vulnerability Scan...'
+                dir('C:\\ProgramData\\Jenkins\\my-app') {
+                    bat "${env.TRIVY_PATH} fs --exit-code 1 --severity HIGH,CRITICAL --format json --output trivy-report.json ."
+
+                    archiveArtifacts artifacts: 'trivy-report.json', allowEmptyArchive: true
+
+                    script {
+                        def trivyReport = readJSON file: 'trivy-report.json'
+                        def hasVulnerabilities = false
+
+                        trivyReport.Results.each { result ->
+                            if (result.Vulnerabilities && result.Vulnerabilities.size() > 0) {
+                                hasVulnerabilities = true
+                            }
+                        }
+
+                        if (hasVulnerabilities) {
+                            error "Trivy found vulnerabilities with HIGH or CRITICAL severity."
+                        } else {
+                            echo "No HIGH or CRITICAL vulnerabilities found by Trivy."
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo 'Performing SonarQube analysis...'
+                dir('C:\\ProgramData\\Jenkins\\my-app') {
+                    withSonarQubeEnv('MySonarQubeServer') 
+                        bat 'mvn sonar:sonar'
+                    }
                 }
             }
         }
 
         stage('Quality Gate') {
             steps {
-                // Wait for the SonarQube Quality Gate to be evaluated
+                echo 'Waiting for SonarQube quality gate result...'
                 timeout(time: 1, unit: 'HOURS') {
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
 
-        stage('Deploy to Staging') {
-            steps {
-                // Deploy to staging environment using Docker Compose
-                sh 'docker-compose -f docker-compose.staging.yml up -d'
+        stage('Deploy') {
+            when {
+                branch 'main' 
             }
-        }
-
-        stage('Release to Production') {
             steps {
-                // Manual approval before deploying to production
-                input "Approve Deployment to Production?"
+                echo 'Deploying application locally...'
 
-                // Deploy to production environment using Docker Compose
-                sh 'docker-compose -f docker-compose.prod.yml up -d'
-            }
-        }
+                bat """
+                if not exist "${env.DEPLOY_DIR}" (
+                    mkdir "${env.DEPLOY_DIR}"
+                )
+                """
 
-        stage('Monitoring') {
-            steps {
-                // Placeholder for monitoring steps (integrate monitoring tools here)
-                echo 'Monitoring is set up separately via Datadog.'
+                bat """
+                copy "C:\\ProgramData\\Jenkins\\my-app\\target\\my-app-1.0-SNAPSHOT.jar" "${env.DEPLOY_DIR}\\my-app.jar" /Y
+                """
+
+
+                // Uncomment the following lines to run the application
+                /*
+                bat """
+                start "MyApp" java -jar "${env.DEPLOY_DIR}\\my-app.jar"
+                """
+                */
             }
         }
     }
 
     post {
-        always {
-            // Clean up Docker images to save space
-            sh 'docker system prune -f'
+        success {
+            echo 'Pipeline completed successfully!'
+            // Send success notification
+            mail to: 'cold2thev@gmail.com',
+                 subject: "Build Successful: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 body: "The build was successful."
         }
         failure {
-            // Notify team of build failure
-            echo 'Build failed!'
+            echo 'Pipeline failed.'
+            // Send failure notification
+            mail to: 'cold2thev@gmail.com',
+                 subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 body: "The build failed. Please check the Jenkins console output."
         }
     }
 }
-

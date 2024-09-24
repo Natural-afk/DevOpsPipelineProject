@@ -136,8 +136,17 @@ pipeline {
                 script {
                     echo 'Releasing to production using Octopus Deploy...'
                     bat """
-                    ${env.OCTO_CLI} create-release --project MyWebApp --releaseNumber 1.0.${env.BUILD_NUMBER} --deployTo Production --server http://localhost:8082 --apiKey c73ea6352f0e55d9ea9d1f85c9e5b580
+                    ${env.OCTO_CLI} create-release --project MyWebApp --releaseNumber 1.0.${env.BUILD_NUMBER} --deployTo Production --server http://localhost:8082 --apiKey API-GYVWJTOVGSV7SLJE6BYFZVM8XKPLDDCN
                     """
+                }
+            }
+        }
+
+        stage('Monitor with Datadog') {
+            steps {
+                script {
+                    echo 'Integrating with Datadog for monitoring...'
+                    bat "datadog-agent status"  // Example command, use relevant Datadog agent commands for your setup
                 }
             }
         }

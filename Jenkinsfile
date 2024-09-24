@@ -9,8 +9,8 @@ pipeline {
     environment {
         DEPLOY_DIR = 'C:\\ProgramData\\Jenkins\\my-app\\deployment'
         TRIVY_PATH = 'C:\\Program Files\\Trivy\\trivy.exe'
-        OCTO_CLI = 'C:\\ProgramData\\chocolatey\\lib\\OctopusTools\\tools\\octo.exe'  // Path to Octopus CLI
-        BUILD_VERSION = "${env.BUILD_NUMBER ?: '1.0.0'}"  // Fallback to '1.0.0' if BUILD_NUMBER is not defined
+        OCTO_CLI = 'C:\\ProgramData\\chocolatey\\lib\\OctopusTools\\tools\\octo.exe'
+        BUILD_VERSION = "1.0.${env.BUILD_NUMBER}"  // Use Jenkins build number to ensure a unique version for each release
     }
 
     stages {
@@ -62,9 +62,8 @@ pipeline {
             steps {
                 echo 'Running Trivy Vulnerability Scan...'
                 dir('C:\\ProgramData\\Jenkins\\my-app') {
-                    bat '"C:\\Program Files\\Trivy\\trivy.exe" fs --exit-code 1 --severity HIGH,CRITICAL --format json --output trivy-report.json .'
+                    bat "\"${TRIVY_PATH}\" fs --exit-code 1 --severity HIGH,CRITICAL --format json --output trivy-report.json ."
                     archiveArtifacts artifacts: 'trivy-report.json', allowEmptyArchive: true
-
                     script {
                         def trivyReport = readJSON file: 'trivy-report.json'
                         def hasVulnerabilities = false
@@ -126,7 +125,7 @@ pipeline {
                 script {
                     echo 'Releasing to production using Octopus Deploy...'
                     bat """
-                    ${env.OCTO_CLI} create-release --project MyWebApp --releaseNumber 1.0.${env.BUILD_NUMBER} --deployTo Production --server http://localhost:8082 --apiKey API-GYVWJTOVGSV7SLJE6BYFZVM8XKPLDDCN
+                    ${env.OCTO_CLI} create-release --project MyWebApp --releaseNumber ${env.BUILD_VERSION} --deployTo Production --server http://localhost:8082 --apiKey API-GYVWJTOVGSV7SLJE6BYFZVM8XKPLDDCN
                     """
                 }
             }
@@ -157,4 +156,3 @@ pipeline {
         }
     }
 }
-

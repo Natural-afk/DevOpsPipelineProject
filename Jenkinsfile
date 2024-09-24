@@ -8,8 +8,9 @@ pipeline {
 
     environment {
         DEPLOY_DIR = 'C:\\ProgramData\\Jenkins\\my-app\\deployment'
-        TRIVY_PATH = '"C:\\Program Files\\Trivy\\trivy.exe"'
+        TRIVY_PATH = 'C:\\Program Files\\Trivy\\trivy.exe'
         OCTO_CLI = 'C:\\ProgramData\\chocolatey\\lib\\OctopusTools\\tools\\octo.exe'  // Path to Octopus CLI
+        BUILD_VERSION = "${env.BUILD_NUMBER ?: '1.0.0'}"  // Fallback to '1.0.0' if BUILD_NUMBER is not defined
     }
 
     stages {
@@ -105,9 +106,6 @@ pipeline {
         }
 
         stage('Deploy') {
-            when {
-                branch 'main'
-            }
             steps {
                 echo 'Deploying application locally...'
 

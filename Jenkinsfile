@@ -62,7 +62,7 @@ pipeline {
             steps {
                 echo 'Running Trivy Vulnerability Scan...'
                 dir('C:\\ProgramData\\Jenkins\\my-app') {
-                    bat "${env.TRIVY_PATH} fs --exit-code 1 --severity HIGH,CRITICAL --format json --output trivy-report.json ."
+                    bat '"C:\\Program Files\\Trivy\\trivy.exe" fs --exit-code 1 --severity HIGH,CRITICAL --format json --output trivy-report.json .'
                     archiveArtifacts artifacts: 'trivy-report.json', allowEmptyArchive: true
 
                     script {
@@ -157,3 +157,4 @@ pipeline {
         }
     }
 }
+

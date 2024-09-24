@@ -9,6 +9,7 @@ pipeline {
     environment {
         DEPLOY_DIR = 'C:\\ProgramData\\Jenkins\\my-app\\deployment'
         TRIVY_PATH = '"C:\\Program Files\\Trivy\\trivy.exe"'
+        DATADOG_API_KEY = 'c73ea6352f0e55d9ea9d1f85c9e5b580' // Datadog API Key
     }
 
     stages {
@@ -68,7 +69,7 @@ pipeline {
                         def trivyReport = readJSON file: 'trivy-report.json'
                         def hasVulnerabilities = false
 
-                        trivyReport.Results.each { result ->
+                        trivyReport.Results.each { result -> 
                             if (result.Vulnerabilities && result.Vulnerabilities.size() > 0) {
                                 hasVulnerabilities = true
                             }
@@ -127,6 +128,48 @@ pipeline {
                 start "MyApp" java -jar "${env.DEPLOY_DIR}\\my-app.jar"
                 """
                 */
+            }
+        }
+
+        stage('Release to Octopus') {
+            steps {
+                script {
+                    echo 'Releasing to production using Octopus Deploy...'
+                    octopusDeployRelease additionalArgs: '',
+                        releaseVersion: '1.0.${BUILD_NUMBER}', 
+                        project: 'MyWebApp',             
+                        deployTo: 'Production',                 
+                        tenant: '',
+                        environment: 'Production',
+                        serverId: 'MyOctopusServer',            
+                        releaseNotes: 'Release version 1.0.${BUILD_NUMBER}'
+                }
+            }
+        }
+
+        stage('Monitoring with Datadog') {
+            steps {
+                echo 'Sending metrics to Datadog...'
+                script {
+                    def response = httpRequest(
+                        url: 'https://api.datadoghq.com/api/v1/series',
+                        httpMode: 'POST',
+                        customHeaders: [[name: 'DD-API-KEY', value: "${env.DATADOG_API_KEY}"]],
+                        contentType: 'APPLICATION_JSON',
+                        requestBody: '''
+                        {
+                            "series": [{
+                                "metric": "myapp.jenkins_build.success",
+                                "points": [[${System.currentTimeMillis() / 1000}, 1]],
+                                "type": "gauge",
+                                "host": "${env.NODE_NAME}",
+                                "tags": ["jenkins:${env.JOB_NAME}", "build:${env.BUILD_NUMBER}"]
+                            }]
+                        }
+                        '''
+                    )
+                    echo "Response from Datadog: ${response}"
+                }
             }
         }
     }

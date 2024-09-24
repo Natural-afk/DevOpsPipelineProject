@@ -62,14 +62,13 @@ pipeline {
                 echo 'Running Trivy Vulnerability Scan...'
                 dir('C:\\ProgramData\\Jenkins\\my-app') {
                     bat "${env.TRIVY_PATH} fs --exit-code 1 --severity HIGH,CRITICAL --format json --output trivy-report.json ."
-
                     archiveArtifacts artifacts: 'trivy-report.json', allowEmptyArchive: true
 
                     script {
                         def trivyReport = readJSON file: 'trivy-report.json'
                         def hasVulnerabilities = false
 
-                        trivyReport.Results.each { result -> 
+                        trivyReport.Results.each { result ->
                             if (result.Vulnerabilities && result.Vulnerabilities.size() > 0) {
                                 hasVulnerabilities = true
                             }
@@ -121,13 +120,6 @@ pipeline {
                 bat """
                 copy "C:\\ProgramData\\Jenkins\\my-app\\target\\my-app-1.0-SNAPSHOT.jar" "${env.DEPLOY_DIR}\\my-app.jar" /Y
                 """
-
-                // Uncomment the following lines to run the application
-                /*
-                bat """
-                start "MyApp" java -jar "${env.DEPLOY_DIR}\\my-app.jar"
-                """
-                */
             }
         }
 
@@ -142,11 +134,11 @@ pipeline {
             }
         }
 
-        stage('Monitor with Datadog') {
+        stage('Datadog Monitoring') {
             steps {
                 script {
-                    echo 'Integrating with Datadog for monitoring...'
-                    bat "datadog-agent status"  // Example command, use relevant Datadog agent commands for your setup
+                    echo 'Checking Datadog agent status...'
+                    bat '"C:\\Program Files\\Datadog\\Datadog Agent\\bin\\agent.exe" status'
                 }
             }
         }

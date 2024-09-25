@@ -127,7 +127,7 @@ pipeline {
                 script {
                     echo 'Releasing to production using Octopus Deploy...'
                     bat """
-                    ${env.OCTO_CLI} create-release --project MyWebApp --releaseNumber 1.0.${BUILD_VERSION}-${TIMESTAMP} --deployTo Production --server http://localhost:8082 --apiKey API-GYVWJTOVGSV7SLJE6BYFZVM8XKPLDDCN
+                    "${env.OCTO_CLI}" create-release --project MyWebApp --releaseNumber 1.0.${BUILD_VERSION}-${TIMESTAMP} --deployTo Production --server http://localhost:8082 --apiKey API-GYVWJTOVGSV7SLJE6BYFZVM8XKPLDDCN
                     """
                 }
             }

@@ -1,158 +1,61 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    
-    <!-- Basic project details -->
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.example</groupId>
+
+    <groupId>com.mycompany</groupId>
     <artifactId>my-app</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>My Java Application</name>
-    <description>An HD-worthy Maven Java project with intricate settings.</description>
-    
-    <!-- Java version -->
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <maven.test.skip>false</maven.test.skip>  <!-- Set to true if you want to skip tests -->
-        <jacoco.version>0.8.7</jacoco.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>17</java.version>
+        <spring.boot.version>2.7.5</spring.boot.version>
     </properties>
 
-    <!-- Dependencies -->
     <dependencies>
-        <!-- JUnit 5 for testing -->
+        <!-- Spring Boot Starter Web -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.2</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+
+        <!-- JUnit for unit testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.2</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <!-- Log4j for logging -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.17.0</version>
-        </dependency>
-        
-        <!-- Additional Dependencies -->
-        <!-- Add any other libraries your project needs -->
     </dependencies>
 
-    <!-- Build plugins -->
     <build>
         <plugins>
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal> <!-- Ensures the JAR is executable -->
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.10.1</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
-            </plugin>
-
-            <!-- Maven Surefire Plugin (JUnit Tests) -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
-                <configuration>
-                    <includes>
-                        <include>**/Test*.java</include>
-                        <include>**/*Test.java</include>
-                    </includes>
-                </configuration>
-            </plugin>
-
-            <!-- JaCoCo Code Coverage Plugin -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Maven Jar Plugin to package the app -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.example.App</mainClass>  <!-- Main class of your application -->
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <!-- SpotBugs for Static Code Analysis -->
-            <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.2.3</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
-
-    <!-- Reporting plugins -->
-    <reporting>
-        <plugins>
-            <!-- JaCoCo for test coverage reports -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco.version}</version>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <report>report</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
-
-            <!-- Maven Site Plugin to generate project documentation -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.9.1</version>
-                <configuration>
-                    <outputDirectory>${project.build.directory}/site</outputDirectory>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
-
 </project>

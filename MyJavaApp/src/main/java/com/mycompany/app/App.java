@@ -14,6 +14,11 @@ public class App {
 
     @GetMapping("/")
     public String hello() {
-        return "Hello World!";
+        return "Hello Gamer!";
+    }
+
+    @GetMapping("/play-snake")
+    public String playSnake() {
+        return "Snake game can only be run in the terminal. Check the console!";
     }
 }
